@@ -2,21 +2,25 @@ import pandas
 import pyodbc
 import getpass
 
-server = 'ARTEMIS\\USMDATABASE'
-dataBase = 'FUT-USM'
-user = str(input("User: "))
-password = str(getpass.getpass())
+def conectar_bd():
+    server = 'ARTEMIS\\USMDATABASE'
+    dataBase = 'FUT-USM'
+    user = str(input("User: "))
+    password = str(getpass.getpass())
 
-try:
-    conexion = pyodbc.connect(
-        'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + dataBase +
-        ';UID=' + user + ';PWD=' + password
-        )
-    print("Successful connection!\n\n")
+    try:
+        conexion = pyodbc.connect(
+            'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + dataBase +
+            ';UID=' + user + ';PWD=' + password
+            )
+        print("Successful connection!\n\n")
 
-except Exception as error:
-    print("Error: ", error, "\n")
+    except Exception as error:
+        print("Error: ", error, "\n")
 
+    return conexion
+
+conexion = conectar_bd()
 with conexion.cursor() as csr:
     with open("FIFA - World Cup Summary.csv", "r") as summary:
         print("FILE is open\n")
@@ -25,7 +29,7 @@ with conexion.cursor() as csr:
         crearTabla = '''
             IF OBJECT_ID(N'dbo.summary', N'U') IS NULL
                 CREATE TABLE summary(
-                YEAR INT NOT NULL PRIMARY KEY,
+                YEAR INT NOT NULL FOREIGN KEY REFERENCES mundial_,
                 HOST VARCHAR(25),
                 CHAMPION VARCHAR(25),
                 SECOND_PLACE VARCHAR(25),
@@ -63,4 +67,9 @@ for fileName in archivos:
         data = pandas.read_csv(file)
         columnas = data.columns
         infoDataFrame = data.shape #(n° de filas, n° de columnas)
-  
+        creador = '''
+            IF OBJECT_ID(N'dbo.mundial_{}', N 'U') IS NULL
+            CREATE TABLE mundial_{}(
+            YEAR_PLAYED INT NOT NULL PRIMARY KEY,
+
+            )'''

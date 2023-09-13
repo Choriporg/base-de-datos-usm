@@ -1,5 +1,6 @@
 import pandas
 import pyodbc
+import getpass
 
 def obtener_paises(archivos):
     paises = []
@@ -24,32 +25,35 @@ archivos = [
     ]
 server = 'ARTEMIS\\USMDATABASE'
 dataBase = 'FUT-USM'
+user = str(input("User: "))
+password = str(getpass.getpass())
 
 try:
     conexion = pyodbc.connect(
         'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + dataBase +
-        ';UID=' + "IGNACIO" + ';PWD=' + "Nachito14112002."
+        ';UID=' + user + ';PWD=' + password
     )
 
 except Exception as error:
     print("Error: ", error, "\n")
 
 paises = obtener_paises(archivos)
+cursor = conexion.cursor()
 for pais in paises:
     consulta = '''
-                IF OBJECT_ID(N'dbo.{}', N'U') IS NULL
-                    CREATE TABLE {}(
-                    YEAR INT NOT NULL PRIMARY KEY,
-                    POSITION INT NOT NULL,
-                    GAMES_PLAYED INT NOT NULL,
-                    GAMES_WON INT NOT NULL,
-                    GAMES_TIED INT NOT NULL,
-                    GAMES_LOST INT NOT NULL,
-                    GOALS_FOR INT NOT NULL,
-                    GOALS_AGAINST INT NOT NULL,
-                    GOALS_DIFF INT NOT NULL,
-                    POINTS INT NOT NULL
-                    );
-            '''.format(pais, pais)
-    with conexion.cursor() as cursor:
-        cursor.execute(consulta)
+    IF OBJECT_ID(N'dbo.{}', N'U') IS NULL
+        CREATE TABLE {}(
+            YEAR INT NOT NULL PRIMARY KEY,
+            POSITION INT NOT NULL,
+            GAMES_PLAYED INT NOT NULL,
+            GAMES_WON INT NOT NULL,
+            GAMES_TIED INT NOT NULL,
+            GAMES_LOST INT NOT NULL,
+            GOALS_FOR INT NOT NULL,
+            GOALS_AGAINST INT NOT NULL,
+            GOALS_DIFF INT NOT NULL,
+            POINTS INT NOT NULL
+        );'''.format(pais, pais)
+    
+    print(consulta + '\n')
+    cursor.execute(consulta)

@@ -184,7 +184,7 @@ def proof(conexion,country):
         df["Goal Diff"] = goal_diff
         df["Points"] = points
         print('\n',country, '\n')
-        print(df)
+        print(df, '\n')
 
 def top_three(conexion):
     with conexion.cursor() as cursor:
@@ -205,7 +205,7 @@ def top_three(conexion):
             goals.append(row[1])
         df["Country"] = team
         df["Total Goals"] = goals
-        print(df)
+        print(df, '\n')
 
 def won_on_home(conexion):
     with conexion.cursor() as cursor:
@@ -225,7 +225,7 @@ def won_on_home(conexion):
             team.append(row[1])
         df["Year"] = year
         df["Country"] = team
-        print(df)
+        print(df, '\n')
 
 def mostThirdOrBetter(conexion):
     with conexion.cursor() as cursor:
@@ -242,12 +242,14 @@ def mostThirdOrBetter(conexion):
         df["Times"] = None
         team = []
         times = []
+
         for row in cursor.fetchall():
             team.append(row[0])
             times.append(row[1])
+
         df["Team"] = team
         df["Times"] = times
-        print(df)
+        print(df, '\n')
 
 def best_ratio(conexion):
     with conexion.cursor() as cursor:
@@ -270,12 +272,87 @@ def best_ratio(conexion):
         df["Ratio"] = ratio
         print(df,"\n")
 
+def most_goals_against(conexion):
+    with conexion.cursor() as cursor:
+        query = '''SELECT TOP 1 TEAM, SUM(GOALS_AGAINST) AS N_GOALS_AGAINST
+        FROM MUNDIAL
+        GROUP BY TEAM
+        ORDER BY SUM(GOALS_AGAINST) DESC'''
+        cursor.execute(query)
+        
+        df = pandas.DataFrame({})
+        team = []
+        agains_num = []
+        df["Team"] = None
+        df["Goals Against"] = None
+        for row in cursor.fetchall():
+            team.append(row[0])
+            agains_num.append(row[1])
+        df["Team"] = team
+        df["Goals Against"] = agains_num
+        print(df, '\n')
+
+def rivales_historicos(conexion):
+    with conexion.cursor() as cursor:
+        query = '''SELECT winners , runnerUp, count(*) as count
+            FROM (select YEAR_PLAYED as year1, team as winners from mundial where place=1) as table1,
+            (select YEAR_PLAYED as year2,team as runnerUp from mundial where place=2) as table2
+            WHERE year1=year2
+            group by winners, runnerUp
+            order by count desc'''
+        
+        cursor.execute(query)
+        df = pandas.DataFrame({})
+        df["Team 1"] = None
+        df["Team 2"] = None
+        df["Times"] = None
+        team1 = []
+        team2 = []
+        times = []
+
+        for row in cursor.fetchall():
+            team1.append(row[0])
+            team2.append(row[1])
+            times.append(row[2])
+
+        df["Team 1"] = team1
+        df["Team 2"] = team2
+        df["Times"] = times
+
+        print(df, '\n')
+
+def most_times_third(conexion):
+    with conexion.cursor() as cursor:
+        query = '''SELECT TOP 5 TEAM, SUM(PLACE) AS N_Third
+        FROM MUNDIAL
+        WHERE PLACE=3
+        GROUP BY TEAM
+        ORDER BY SUM(PLACE) DESC'''
+
+        cursor.execute(query)
+
+        df = pandas.DataFrame({})
+        df["Team"] = None
+        df["Times"] = None
+        
+        team = []
+        times = []
+
+        for row in cursor.fetchall():
+            team.append(row[0])
+            times.append(row[1])
+        
+        df["Team"] = team
+        df["Times"] = times
+        print(df, '\n')
+        
+
 print("Ingrese credenciales para conectar a la base de datos.\n")
 connection = conectar_bd()
 flag = True
 
 while flag:
-    print("Seleccione una opcion: \n\t(1) Crear tablas. \n\t(2) Insertar datos.\n\t(3) Borrar tablas.\n\t(4) Mostrar campeón. \n\t(5) Buscar país. \n\t(6) Top 3. \n\t(7) Campeón local. \n\t(8) Más veces en el podio.\n\t(9) Mejor ratio. \n\t(Otro) Salir.")
+    print("Seleccione una opcion: \n\t(1) Crear tablas. \n\t(2) Insertar datos.\n\t(3) Borrar tablas.\n\t(4) Mostrar campeón. \n\t(5) Buscar país. \n\t(6) Top 3. \n\t(7) Campeón local. \n\t(8) Más veces en el podio.\n\t(9) Mejor ratio de goles.\n\t(10) Más goles recibidos. \n\t(11) Rivales históricos. \n\t(12) Top 5 veces tercero. \n\t(Otro) Salir.")
     accion = int(input("Ingrese accion: "))
     if accion == 1:
         print("Creando tablas\n")
@@ -305,10 +382,15 @@ while flag:
     elif accion == 9:
         print("Mejor ratio\n")
         best_ratio(connection)
-
+    elif accion == 10:
+        print("\nMás goles recibidos\n")
+        most_goals_against(connection)
+    elif accion == 11:
+        print("\nRivales históricos.\n")
+        rivales_historicos(connection)
+    elif accion == 12:
+        print("\nMás veces tercer lugar\n")
+        most_times_third(connection)
     else:
         flag = False
         connection.close()
-
-
-

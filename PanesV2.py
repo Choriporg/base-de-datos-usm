@@ -10,10 +10,12 @@ def leer_csv(filename):
 
 def conectar_bd():
 #    server = 'ARTEMIS\\USMDATABASE'
-    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
-    dataBase = 'FUT-USM'
-    user = 'Panes'
-    password = 'poke'
+#    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
+#    dataBase = 'FUT-USM'
+    server = str(input("Ingrese SERVER: "))
+    dataBase = str(input("Ingrese DATABASE: "))
+    user = str(input("Ingrese Username: "))
+    password = str(input("Ingrese Password: "))
 
     try:
         conexion = pyodbc.connect(
@@ -402,8 +404,8 @@ while flag:
         delete_tables(connection)
         print("Tablas borradas.\n")
     elif accion== '0':
-        show_champions(connection)
         print("\nMostrar campeones por año.\n")
+        show_champions(connection)
     elif accion == "1":
         print("\nMostrar top 5 goleadores historicos.\n")
         maximos_goleadores(connection)
@@ -415,7 +417,7 @@ while flag:
         most_goals_against(connection)
     elif accion == "4":
         pais = str(input("Ingrese país: "))
-        print("\nBuscando país: %s\n",pais)
+        print("\nBuscando país: ",pais,"\n")
         proof(connection, pais)
     elif accion == "5":
         print("\nTop 3 paises con más partidas historico.\n")

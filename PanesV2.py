@@ -13,6 +13,8 @@ def conectar_bd():
 #    server = 'ARTEMIS\\USMDATABASE'
 #    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
 #    dataBase = 'FUT-USM'
+    
+    #loop para atajar errores de input
     flag = True
     while(flag):
         flag = False
@@ -27,25 +29,27 @@ def conectar_bd():
                 )
             print("Successful connection!\n\n")
             return conexion
+            #devuelve la coneccion en caso de ser exitosa
 
         except Exception as error:
             print("Error: ", error, "\n")
             flag = True
+            #vuelve al loop en caso de no ser exitosa
 
+#Borra las dos tablas creadas con el script
 def delete_tables(conexion):
     with conexion.cursor() as cursor:
         drop_tables = '''
-            DROP TABLE dbo.MUNDIAL, dbo.MUNDIALES ;
+            IF EXISTS (
+            DROP TABLE dbo.MUNDIAL, dbo.MUNDIALES
+            )
             '''
-        cursor.execute(drop_tables)
+        cursor.execute(drop_tables) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
-'''
-Crea las tablas MUNDIALES, que contendrá la información general y
-MUNDIAL que contendrá la inforación específica de cada mundial.
 
-La funcion recibe como parámetro la conexión establecida con el servidor
-'''
-
+# Crea las tablas MUNDIALES, que contendrá la información general y
+# MUNDIAL que contendrá la inforación específica de cada mundial.
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def crear_tablas(conexion):
     with conexion.cursor() as cursor:
         crear_mundiales = '''
@@ -74,14 +78,12 @@ def crear_tablas(conexion):
             POINTS INT NOT NULL,
             PRIMARY KEY(YEAR_PLAYED, TEAM)         
             );'''
-        cursor.execute(crear_mundiales)
-        cursor.execute(crear_mundial)
+        cursor.execute(crear_mundiales) # cursor.execute(var) ejecuta el sql query almacenado en la var
+        cursor.execute(crear_mundial) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
-'''
-Recibiendo como parámetro de entrada la conexion establecida con el servidor,
-llena las tablas con la información extraida de los archivos .csv
-'''
 
+# Recibiendo como parámetro de entrada la conexion establecida con el servidor,
+# llena las tablas con la información extraida de los archivos .csv
 def llenar_tablas(conexion):
     with conexion.cursor() as cursor:
         df_summary = leer_csv("FIFA - World Cup Summary.csv")
@@ -97,9 +99,11 @@ def llenar_tablas(conexion):
             if len(anfitriones) == 1:
                 insertar_mundiales = "INSERT INTO MUNDIALES (YEAR, HOST1, MATCHES_PLAYED, AVG_GOALS_PER_GAME) VALUES (?,?,?,?);"
                 cursor.execute(insertar_mundiales, (year, anfitriones[0], match_num, prom_goles))
+                # cursor.execute(var) ejecuta el sql query almacenado en la var
             else: 
                 insertar_mundiales = "INSERT INTO MUNDIALES (YEAR, HOST1, HOST2, MATCHES_PLAYED, AVG_GOALS_PER_GAME) VALUES (?,?,?,?,?);"
                 cursor.execute(insertar_mundiales, (year, anfitriones[0], anfitriones[1], match_num, prom_goles))
+                # cursor.execute(var) ejecuta el sql query almacenado en la var
             
             df_mundial = leer_csv("FIFA - {}.csv".format(str(year)))
             #Extracion de la información del dataframe resultante de la lectura del csv
@@ -132,7 +136,11 @@ def llenar_tablas(conexion):
                         ) VALUES (?,?,?,?,?,?,?,?,?,?,?);'''
                 #Ingresar la información a la tabla
                 cursor.execute(query, (year, pais, posicion, partidos_jugados, ganados, empates, perdidos, gol_favor, gol_contra, gol_diff, puntos))
+                # cursor.execute(var) ejecuta el sql query almacenado en la var
 
+# Muestra por linea de comando los campeones historicos de los mundiales
+# Seleccionando todos los equipos que hayan obtenido la posición n 1
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def show_champions(conexion):
     with conexion.cursor() as cursor:
         search_champions = '''
@@ -140,7 +148,7 @@ def show_champions(conexion):
             FROM MUNDIAL
             WHERE PLACE = 1
             '''
-        cursor.execute(search_champions)
+        cursor.execute(search_champions) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -155,6 +163,9 @@ def show_champions(conexion):
         df["Champion"] = champions
         print(df)
 
+# Muestra por linea de comando los maximos goleadores
+# Seleccionando aquellos equipos (top 5) cuya suma total de goles sea mayor
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def maximos_goleadores(conexion):
     with conexion.cursor() as cursor:
         query = '''SELECT TOP 5 TEAM, SUM(GOALS_FOR) AS TOTAL_GOALS
@@ -162,6 +173,8 @@ def maximos_goleadores(conexion):
         WHERE TEAM=TEAM
         GROUP BY TEAM
         ORDER BY SUM(GOALS_FOR) DESC'''
+        
+        cursor.execute(query) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -169,8 +182,6 @@ def maximos_goleadores(conexion):
         df["Goals"] = None
         team = []
         goals = []
-
-        cursor.execute(query)
         
         for row in cursor.fetchall():
             team.append(row[0])
@@ -180,6 +191,9 @@ def maximos_goleadores(conexion):
         df["Goals"] = goals
         print(df, '\n')
 
+# Muestra por linea de comando el equipo que ha obtenido el tercer lugar mas veces
+# Seleccionando el equipo que a obtenido la tercera posicion mas veces
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def most_times_third(conexion):
     with conexion.cursor() as cursor:
         query = '''SELECT TOP 5 TEAM, SUM(PLACE) AS N_Third
@@ -188,7 +202,7 @@ def most_times_third(conexion):
         GROUP BY TEAM
         ORDER BY SUM(PLACE) DESC'''
 
-        cursor.execute(query)
+        cursor.execute(query) # cursor.execute(var) ejecuta el sql query almacenado en la var
         
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -206,13 +220,16 @@ def most_times_third(conexion):
         df["Times"] = times
         print(df, '\n')
 
+# Muestra por linea de comando el equipo al cual le han metido mas goles
+# Seleccionando el equipo cuya suma total de goles en contra sea la mayor
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def most_goals_against(conexion):
     with conexion.cursor() as cursor:
         query = '''SELECT TOP 1 TEAM, SUM(GOALS_AGAINST) AS N_GOALS_AGAINST
         FROM MUNDIAL
         GROUP BY TEAM
         ORDER BY SUM(GOALS_AGAINST) DESC'''
-        cursor.execute(query)
+        cursor.execute(query) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe        
         df = pandas.DataFrame({})
@@ -227,6 +244,9 @@ def most_goals_against(conexion):
         df["Goals Against"] = agains_num
         print(df, '\n')
 
+# Muestra por linea de comando toda la informacion sobre un pais en especifico
+# Seleccionando toda la informacion sobre el pais en cuestion
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def proof(conexion,country):
     with conexion.cursor() as cursor:
         proof_work = '''
@@ -234,7 +254,7 @@ def proof(conexion,country):
             FROM MUNDIAL
             WHERE TEAM = ?
             '''
-        cursor.execute(proof_work,(country))
+        cursor.execute(proof_work,(country)) # cursor.execute(var) ejecuta el sql query almacenado en la var
         #Listas que serán utilizadas para llenar el dataframe
         year = []
         place = []
@@ -287,6 +307,9 @@ def proof(conexion,country):
         print('\n',country, '\n')
         print(df, '\n')
 
+# Muestra por linea de comando los tres equipos que han jugado mas veces
+# Seleccionando aquellos equipos (top3) cuya suma de partidas jugadas totales sea mayor
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def top_three(conexion):
     with conexion.cursor() as cursor:
         top_countries = '''
@@ -295,7 +318,7 @@ def top_three(conexion):
             GROUP BY TEAM
             ORDER BY SUM(GAMES_PLAYED) DESC
             '''
-        cursor.execute(top_countries)
+        cursor.execute(top_countries) # cursor.execute(var) ejecuta el sql query almacenado en la var
         df = pandas.DataFrame({})
         df["Country"] = None
         df["Total Matches"] = None
@@ -308,6 +331,9 @@ def top_three(conexion):
         df["Total Matches"] = matches
         print(df, '\n')
 
+# Muestra por linea de comando el equipo con mejor relacion victorias/(perdidas+empatadas)
+# Seleccionando el equipo con el mejor ratio
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def best_ratio(conexion):
     with conexion.cursor() as cursor:
         ratio = '''
@@ -316,7 +342,7 @@ def best_ratio(conexion):
             GROUP BY TEAM
             ORDER BY SUM(GAMES_WON)/SUM(GAMES_LOST+GAMES_TIED) DESC
             '''
-        cursor.execute(ratio)
+        cursor.execute(ratio) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -331,6 +357,9 @@ def best_ratio(conexion):
         df["Ratio"] = ratio
         print(df,"\n")
 
+# Muestra por linea de comando aquellos equipos que ganaron el mundial jugando en casa
+# Seleccionando aquellos equipos que fueron host y campeones el mismo año
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def won_on_home(conexion):
     with conexion.cursor() as cursor:
         on_home = '''
@@ -338,7 +367,7 @@ def won_on_home(conexion):
             FROM MUNDIAL,MUNDIALES
             WHERE YEAR=YEAR_PLAYED AND PLACE=1 AND HOST1=TEAM
             '''
-        cursor.execute(on_home)
+        cursor.execute(on_home) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -353,6 +382,9 @@ def won_on_home(conexion):
         df["Country"] = team
         print(df, '\n')
 
+# Muestra por linea de comando el equipo que ha llegado mas veces al podio
+# Seleccionando el equipo que ha tenido mas veces una posicion mejor al cuarto lugar
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def mostThirdOrBetter(conexion):
     with conexion.cursor() as cursor:
         wins = '''
@@ -362,7 +394,7 @@ def mostThirdOrBetter(conexion):
             GROUP BY TEAM
             ORDER BY COUNT(PLACE) DESC
             '''
-        cursor.execute(wins)
+        cursor.execute(wins) # cursor.execute(var) ejecuta el sql query almacenado en la var
         #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team"] = None
@@ -377,7 +409,11 @@ def mostThirdOrBetter(conexion):
         df["Team"] = team
         df["Times"] = times
         print(df, '\n')
-        
+
+# Muestra por linea de comando los dos equipos que se han enfrentado en la final mas veces
+# Creando dos tablas, una de los ganadores de cada año y una de los segundo lugar de cada año
+# Luego contando las veces que cada pareja en particular aparecio, mostrando la cual aparecio mas veces
+# La funcion recibe como parámetro la conexión establecida con el servidor
 def rivales_historicos(conexion):
     with conexion.cursor() as cursor:
         query = '''SELECT TOP 1 winners , runnerUp, count(*) as count
@@ -387,7 +423,7 @@ def rivales_historicos(conexion):
             group by winners, runnerUp
             order by count desc'''
         
-        cursor.execute(query)
+        cursor.execute(query) # cursor.execute(var) ejecuta el sql query almacenado en la var
 
         #Creacion del dataframe
         df = pandas.DataFrame({})
@@ -410,8 +446,9 @@ def rivales_historicos(conexion):
         print(df, '\n')
 
 print("Ingrese credenciales para conectar a la base de datos.\n")
-connection = conectar_bd()
+connection = conectar_bd() # Attempt to connect to the database
 
+# Loop para ui
 flag = True
 while flag:
     print("Seleccione una opcion: \n\t",
@@ -430,6 +467,7 @@ while flag:
           "(8) Más veces en el podio historico.\n\t",
           "(9) Más veces rivales en la final históricos.",
           )
+    #simple elif, ejecuta la funcion segun input, ataja errores en el loop
     accion = str(input("Ingrese accion: "))
     if accion == 'c':
         print("Creando tablas\n")
@@ -475,6 +513,7 @@ while flag:
     elif accion == 'x':
         flag = False
         connection.close()
+        # 'x' termina la conexion con el servidor y rompe el loop
     else :
         print("\nInvalid input, try again: ")
 

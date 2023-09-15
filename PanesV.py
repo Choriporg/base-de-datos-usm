@@ -119,15 +119,76 @@ def llenar_tablas(conexion):
                         ) VALUES (?,?,?,?,?,?,?,?,?,?,?);'''
                 cursor.execute(query, (year, pais, posicion, partidos_jugados, ganados, empates, perdidos, gol_favor, gol_contra, gol_diff, puntos))
 
-
-
-
 def mostrar_campeones(conexion): #en desarrollo
     query = "SELECT YEAR FROM MUNDIALES JOIN"
+def proof(conexion,country):
+    with conexion.cursor() as cursor:
+        proof_work = '''
+            SELECT *
+            FROM MUNDIAL
+            WHERE TEAM = ?
+            '''
+        cursor.execute(proof_work,(country))
+        result = cursor.fetchall()
+        print(result,"\n")
+        #show_table(cursor,result)
+
+def top_three(conexion):
+    with conexion.cursor() as cursor:
+        top_countries = '''
+            SELECT TOP 3 TEAM AS NAME,SUM(GAMES_PLAYED) AS TOTAL_GAMES_PLAYED
+            FROM MUNDIAL
+            GROUP BY TEAM
+            ORDER BY SUM(GAMES_PLAYED) DESC
+            '''
+        cursor.execute(top_countries)
+        result = cursor.fetchall()
+        print(result,"\n")
+
+def won_on_home(conexion):
+    with conexion.cursor() as cursor:
+        on_home = '''
+            SELECT YEAR,HOst1
+            FROM MUNDIAL,MUNDIALES
+            WHERE YEAR=YEAR_PLAYED AND PLACE=1 AND HOST1=TEAM
+            '''
+        cursor.execute(on_home)
+        result = cursor.fetchall()
+        print(result,"\n")
+
+def mostThirdOrBetter(conexion):
+    with conexion.cursor() as cursor:
+        wins = '''
+            SELECT TOP 1 TEAM,COUNT(PLACE) AS MOST_TIMES_BETWEEN_BEST_THREE
+            FROM MUNDIAL
+            WHERE PLACE<4
+            GROUP BY TEAM
+            ORDER BY COUNT(PLACE) DESC
+            '''
+        cursor.execute(wins)
+        result = cursor.fetchall()
+        print(result,"\n")
+
+def best_ratio(conexion):
+    with conexion.cursor() as cursor:
+        ratio = '''
+            SELECT TOP 1 TEAM, SUM(GAMES_WON)/SUM(GAMES_LOST+GAMES_TIED)
+            FROM MUNDIAL
+            GROUP BY TEAM
+            ORDER BY SUM(GAMES_WON)/SUM(GAMES_LOST+GAMES_TIED) DESC
+            '''
+        cursor.execute(ratio)
+        result = cursor.fetchall()
+        print(result,"\n")
 
 print("Ingrese credenciales para conectar a la base de datos.\n")
 connection = conectar_bd()
 flag = True
+#proof(connection,"Chile")
+#top_three(connection)
+#won_on_home(connection)
+#mostThirdOrBetter(connection)
+#best_ratio(connection)
 while flag:
     print("Seleccione una opcion: \n\t(1) Crear tablas. \n\t(2) Insertar datos.\n\t(3) Borrar tablas.\n\t",
           "(4) Show Champions.\n\t (Otro) Salir.")

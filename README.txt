@@ -10,6 +10,6 @@ pip install pyodbc
 
 La ejecución del programa puede hacerse por medio del interprete de python o por consola con el comando:
 
-python3 <<Nombre del programa>>.py
+python3 T1_202030554-4_202104693-3.py
 
-Este proyecto fué desarrollado por Ignacio Panes e Ignacio González para el ramo de Base de Datos (INF-239)
+Este proyecto fué desarrollado por Ignacio Panes (ROL:202030554-4) e Ignacio González (ROL: 202104693-3) para el ramo de Base de Datos (INF-239)

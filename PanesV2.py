@@ -1,13 +1,14 @@
 import pandas
 import pyodbc
 
-
+#Lectura del archivo csv, recibiendo como parametro su nombre, y retornando un dataframe con la información
 def leer_csv(filename):
     with open(filename, "r") as file:
-        dataframe = pandas.read_csv(file, encoding_errors="")
+        dataframe = pandas.read_csv(file)
         file.close()
     return dataframe
 
+#Establece la funcion con el servidor y la retorna
 def conectar_bd():
 #    server = 'ARTEMIS\\USMDATABASE'
 #    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
@@ -37,6 +38,13 @@ def delete_tables(conexion):
             DROP TABLE dbo.MUNDIAL, dbo.MUNDIALES ;
             '''
         cursor.execute(drop_tables)
+
+'''
+Crea las tablas MUNDIALES, que contendrá la información general y
+MUNDIAL que contendrá la inforación específica de cada mundial.
+
+La funcion recibe como parámetro la conexión establecida con el servidor
+'''
 
 def crear_tablas(conexion):
     with conexion.cursor() as cursor:
@@ -69,9 +77,16 @@ def crear_tablas(conexion):
         cursor.execute(crear_mundiales)
         cursor.execute(crear_mundial)
 
+'''
+Recibiendo como parámetro de entrada la conexion establecida con el servidor,
+llena las tablas con la información extraida de los archivos .csv
+'''
+
 def llenar_tablas(conexion):
     with conexion.cursor() as cursor:
         df_summary = leer_csv("FIFA - World Cup Summary.csv")
+
+        #Llenar la tabla munciales con la información resultante del dataframe generado desde el csv
         for i in range(len(df_summary)):
             fila = list(df_summary.loc[i])
             year = int(fila[0])
@@ -87,6 +102,7 @@ def llenar_tablas(conexion):
                 cursor.execute(insertar_mundiales, (year, anfitriones[0], anfitriones[1], match_num, prom_goles))
             
             df_mundial = leer_csv("FIFA - {}.csv".format(str(year)))
+            #Extracion de la información del dataframe resultante de la lectura del csv
             for j in range(len(df_mundial)):
                 fila_mundial = list(df_mundial.loc[j])
                 posicion = int(fila_mundial[0])
@@ -114,6 +130,7 @@ def llenar_tablas(conexion):
                         GOAL_DIFF,
                         POINTS
                         ) VALUES (?,?,?,?,?,?,?,?,?,?,?);'''
+                #Ingresar la información a la tabla
                 cursor.execute(query, (year, pais, posicion, partidos_jugados, ganados, empates, perdidos, gol_favor, gol_contra, gol_diff, puntos))
 
 def show_champions(conexion):
@@ -124,6 +141,8 @@ def show_champions(conexion):
             WHERE PLACE = 1
             '''
         cursor.execute(search_champions)
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Year"] = None
         df["Champion"] = None
@@ -143,6 +162,8 @@ def maximos_goleadores(conexion):
         WHERE TEAM=TEAM
         GROUP BY TEAM
         ORDER BY SUM(GOALS_FOR) DESC'''
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team"] = None
         df["Goals"] = None
@@ -168,7 +189,8 @@ def most_times_third(conexion):
         ORDER BY SUM(PLACE) DESC'''
 
         cursor.execute(query)
-
+        
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team"] = None
         df["Times"] = None
@@ -191,7 +213,8 @@ def most_goals_against(conexion):
         GROUP BY TEAM
         ORDER BY SUM(GOALS_AGAINST) DESC'''
         cursor.execute(query)
-        
+
+        #Creacion del dataframe        
         df = pandas.DataFrame({})
         team = []
         agains_num = []
@@ -212,6 +235,7 @@ def proof(conexion,country):
             WHERE TEAM = ?
             '''
         cursor.execute(proof_work,(country))
+        #Listas que serán utilizadas para llenar el dataframe
         year = []
         place = []
         games_played = []
@@ -222,6 +246,8 @@ def proof(conexion,country):
         goals_against = []
         goal_diff = []
         points = []
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Year"] = None
         df["Place"] = None
@@ -234,6 +260,7 @@ def proof(conexion,country):
         df["Goal Diff"] = None
         df["Points"] = None
 
+        #Llenando las listas
         for row in cursor.fetchall():
             year.append(row[0])
             place.append(row[2])
@@ -246,6 +273,7 @@ def proof(conexion,country):
             goal_diff.append(row[9])
             points.append(row[10])
 
+        #Llenando el dataframe
         df["Year"] = year
         df["Place"] = place
         df["Games Played"] = games_played
@@ -289,6 +317,8 @@ def best_ratio(conexion):
             ORDER BY SUM(GAMES_WON)/SUM(GAMES_LOST+GAMES_TIED) DESC
             '''
         cursor.execute(ratio)
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team"] = None
         df["Ratio"] = None
@@ -309,6 +339,8 @@ def won_on_home(conexion):
             WHERE YEAR=YEAR_PLAYED AND PLACE=1 AND HOST1=TEAM
             '''
         cursor.execute(on_home)
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Year"] = None
         df["Country"] = None
@@ -331,6 +363,7 @@ def mostThirdOrBetter(conexion):
             ORDER BY COUNT(PLACE) DESC
             '''
         cursor.execute(wins)
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team"] = None
         df["Times"] = None
@@ -355,6 +388,8 @@ def rivales_historicos(conexion):
             order by count desc'''
         
         cursor.execute(query)
+
+        #Creacion del dataframe
         df = pandas.DataFrame({})
         df["Team 1"] = None
         df["Team 2"] = None

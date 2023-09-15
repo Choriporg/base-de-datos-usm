@@ -12,21 +12,24 @@ def conectar_bd():
 #    server = 'ARTEMIS\\USMDATABASE'
 #    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
 #    dataBase = 'FUT-USM'
-    server = str(input("Ingrese SERVER: "))
-    dataBase = str(input("Ingrese DATABASE: "))
-    user = str(input("Ingrese Username: "))
-    password = str(input("Ingrese Password: "))
+    flag = True
+    while(flag):
+        flag = False
+        server = str(input("Ingrese SERVER: "))
+        dataBase = str(input("Ingrese DATABASE: "))
+        user = str(input("Ingrese Username: "))
+        password = str(input("Ingrese Password: "))
+        try:
+            conexion = pyodbc.connect(
+                'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + dataBase +
+                ';UID=' + user + ';PWD=' + password
+                )
+            print("Successful connection!\n\n")
+            return conexion
 
-    try:
-        conexion = pyodbc.connect(
-            'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + dataBase +
-            ';UID=' + user + ';PWD=' + password
-            )
-        print("Successful connection!\n\n")
-        return conexion
-
-    except Exception as error:
+        except Exception as error:
             print("Error: ", error, "\n")
+            flag = True
 
 def delete_tables(conexion):
     with conexion.cursor() as cursor:
@@ -373,8 +376,8 @@ def rivales_historicos(conexion):
 
 print("Ingrese credenciales para conectar a la base de datos.\n")
 connection = conectar_bd()
-flag = True
 
+flag = True
 while flag:
     print("Seleccione una opcion: \n\t",
           "(c) Crear tablas. \n\t",
@@ -410,7 +413,7 @@ while flag:
         print("\nMostrar top 5 goleadores historicos.\n")
         maximos_goleadores(connection)
     elif accion == "2":
-        print("\nop 5 más veces tercer lugar historico.\n")
+        print("\nTop 5 más veces tercer lugar historico.\n")
         most_times_third(connection)
     elif accion == "3":
         print("\nPais con más goles recibidos historico.\n")

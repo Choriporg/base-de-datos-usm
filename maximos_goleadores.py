@@ -10,6 +10,8 @@ def maximos_goleadores(conexion):
         df["Goals"] = None
         team = []
         goals = []
+
+        cursor.execute(query)
         
         for row in cursor.fetchall():
             team.append(row[0])

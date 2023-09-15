@@ -9,7 +9,8 @@ def leer_csv(filename):
     return dataframe
 
 def conectar_bd():
-    server = 'ARTEMIS\\USMDATABASE'
+#    server = 'ARTEMIS\\USMDATABASE'
+    server = 'DESKTOP-9GL51HC\SQLEXPRESS'
     dataBase = 'FUT-USM'
     user = 'Panes'
     password = 'poke'
@@ -130,6 +131,29 @@ def show_champions(conexion):
         df["Champion"] = champions
         print(df)
 
+def maximos_goleadores(conexion):
+    with conexion.cursor() as cursor:
+        query = '''SELECT TOP 5 TEAM, SUM(GOALS_FOR) AS TOTAL_GOALS
+        FROM MUNDIAL
+        WHERE TEAM=TEAM
+        GROUP BY TEAM
+        ORDER BY SUM(GOALS_FOR) DESC'''
+        df = pandas.DataFrame({})
+        df["Team"] = None
+        df["Goals"] = None
+        team = []
+        goals = []
+
+        cursor.execute(query)
+        
+        for row in cursor.fetchall():
+            team.append(row[0])
+            goals.append(row[1])
+        
+        df["Team"] = team
+        df["Goals"] = goals
+        print(df, '\n')
+
 def most_times_third(conexion):
     with conexion.cursor() as cursor:
         query = '''SELECT TOP 5 TEAM, SUM(PLACE) AS N_Third
@@ -241,14 +265,14 @@ def top_three(conexion):
         cursor.execute(top_countries)
         df = pandas.DataFrame({})
         df["Country"] = None
-        df["Total Goals"] = None
+        df["Total Matches"] = None
         team = []
-        goals = []
+        matches = []
         for row in cursor.fetchall():
             team.append(row[0])
-            goals.append(row[1])
+            matches.append(row[1])
         df["Country"] = team
-        df["Total Goals"] = goals
+        df["Total Matches"] = matches
         print(df, '\n')
 
 def best_ratio(conexion):
@@ -350,45 +374,67 @@ connection = conectar_bd()
 flag = True
 
 while flag:
-    print("Seleccione una opcion: \n\t(1) Crear tablas. \n\t(2) Insertar datos.\n\t(3) Borrar tablas.\n\t(4) Mostrar campeón. \n\t(5) Buscar país. \n\t(6) Top 3. \n\t(7) Campeón local. \n\t(8) Más veces en el podio.\n\t(9) Mejor ratio de goles.\n\t(10) Más goles recibidos. \n\t(11) Rivales históricos. \n\t(12) Top 5 veces tercero. \n\t(Otro) Salir.")
-    accion = int(input("Ingrese accion: "))
-    if accion == 1:
+    print("Seleccione una opcion: \n\t",
+          "(c) Crear tablas. \n\t",
+          "(v) Insertar datos.\n\t",
+          "(b) Borrar tablas.\n\t",
+          "(x) Salir.\n\t",
+          "(0) Mostrar campeones por año.\n\t",
+          "(1) Mostrar top 5 goleadores historicos.\n\t",
+          "(2) Top 5 más veces tercer lugar historico.\n\t",
+          "(3) Pais con más goles recibidos historico.\n\t",
+          "(4) Buscar país.\n\t",
+          "(5) Top 3 paises con más partidas historico.\n\t",
+          "(6) Mejor ratio de partidas historico.\n\t",
+          "(7) Campeónes locales historicos.\n\t",
+          "(8) Más veces en el podio historico.\n\t",
+          "(9) Más veces rivales en la final históricos.",
+          )
+    accion = str(input("Ingrese accion: "))
+    if accion == 'c':
         print("Creando tablas\n")
         crear_tablas(connection)
         print("Tablas creadas con exito.\n")
-    elif accion== 2:
+    elif accion== 'v':
         llenar_tablas(connection)
         print("Datos ingresados.\n")
-    elif accion== 3:
+    elif accion== 'b':
         delete_tables(connection)
         print("Tablas borradas.\n")
-    elif accion== 4:
+    elif accion== '0':
         show_champions(connection)
-        print("\nChampions.\n")
-    elif accion == 5:
-        pais = str(input("Ingrese país: "))
-        proof(connection, pais)
-    elif accion == 6:
-        print("\nTop 3.\n")
-        top_three(connection)
-    elif accion == 7:
-        print("\nCampeones en casa\n")
-        won_on_home(connection)
-    elif accion == 8:
-        print("\nMás veces en el podio.\n")
-        mostThirdOrBetter(connection)
-    elif accion == 9:
-        print("Mejor ratio\n")
-        best_ratio(connection)
-    elif accion == 10:
-        print("\nMás goles recibidos\n")
-        most_goals_against(connection)
-    elif accion == 11:
-        print("\nRivales históricos.\n")
-        rivales_historicos(connection)
-    elif accion == 12:
-        print("\nMás veces tercer lugar\n")
+        print("\nMostrar campeones por año.\n")
+    elif accion == "1":
+        print("\nMostrar top 5 goleadores historicos.\n")
+        maximos_goleadores(connection)
+    elif accion == "2":
+        print("\nop 5 más veces tercer lugar historico.\n")
         most_times_third(connection)
-    else:
+    elif accion == "3":
+        print("\nPais con más goles recibidos historico.\n")
+        most_goals_against(connection)
+    elif accion == "4":
+        pais = str(input("Ingrese país: "))
+        print("\nBuscando país: %s\n",pais)
+        proof(connection, pais)
+    elif accion == "5":
+        print("\nTop 3 paises con más partidas historico.\n")
+        top_three(connection)
+    elif accion == "6":
+        print("\nMejor ratio de partidas historico.\n")
+        best_ratio(connection)
+    elif accion == "7":
+        print("\nCampeónes locales historicos.\n")
+        won_on_home(connection)
+    elif accion == "8":
+        print("\nMás veces en el podio historico.\n")
+        mostThirdOrBetter(connection)
+    elif accion == "9":
+        print("\nMás veces rivales en la final históricos.\n")
+        rivales_historicos(connection)
+    elif accion == 'x':
         flag = False
         connection.close()
+    else :
+        print("\nInvalid input, try again: ")
+
